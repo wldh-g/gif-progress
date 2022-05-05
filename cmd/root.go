@@ -14,17 +14,19 @@ import (
 
 var barTop bool
 var barHeight int
+var barFPS int
 var barColorString string
 var outFile string
 var inFile string
 
 func init() {
 	cobra.OnInitialize()
-	RootCmd.Flags().BoolVar(&barTop, "bar-top", false, "Bar is on top")
+	RootCmd.Flags().BoolVarP(&barTop, "bar-top", "t", false, "Bar is on top")
 	RootCmd.Flags().IntVar(&barHeight, "bar-height", 5, "Bar height")
-	RootCmd.Flags().StringVar(&barColorString, "bar-color", "#ccc", "Bar color")
-	RootCmd.Flags().StringVar(&outFile, "out", "", "Output gif")
-	RootCmd.Flags().StringVar(&inFile, "in", "", "Input gif")
+	RootCmd.Flags().StringVarP(&barColorString, "bar-color", "c", "#ccc", "Bar color")
+	RootCmd.Flags().IntVarP(&barFPS, "bar-fps", "f", 0, "Bar FPS (output gif fps will be changed if set)")
+	RootCmd.Flags().StringVarP(&outFile, "out", "o", "", "Output gif")
+	RootCmd.Flags().StringVarP(&inFile, "in", "i", "", "Input gif")
 }
 
 var RootCmd = &cobra.Command{
@@ -64,14 +66,19 @@ var RootCmd = &cobra.Command{
 		}
 		c := hex.ToRGB()
 		barColor := color.RGBA{c.R, c.G, c.B, 255}
-		inOutGif, err := gif.DecodeAll(r)
+		inGif, err := gif.DecodeAll(r)
 		if err != nil {
 			return err
 		}
 		// Add progress bar to gif
-		gif_progress.AddProgressBar(inOutGif, barTop, barHeight, barColor)
+		var outGif *gif.GIF
+		if barFPS == 0 {
+			outGif = gif_progress.AddProgressBar(inGif, barTop, barHeight, barColor)
+		} else {
+			outGif = gif_progress.AddProgressBarFPS(inGif, barTop, barHeight, barColor, barFPS)
+		}
 		// Write gif
-		err = gif.EncodeAll(w, inOutGif)
+		err = gif.EncodeAll(w, outGif)
 		return err
 	},
 }
