@@ -57,13 +57,13 @@ func AddProgressBarFPS(inGif *gif.GIF, barTop bool, barHeight int, barColor colo
 		if w > inGif.Config.Width {
 			w = inGif.Config.Width
 		}
-		h := barHeight
-		zeroH := 0
+		startHeight := 0
+		endHeight := barHeight - 1
 		if !barTop {
-			h = inGif.Config.Height - barHeight
-			zeroH = inGif.Config.Height
+			startHeight = inGif.Config.Height - barHeight + 1
+			endHeight = inGif.Config.Height
 		}
-		if (image.Point{0, zeroH}).In(inGif.Image[frameIndex].Rect) || (image.Point{w, zeroH}).In(inGif.Image[frameIndex].Rect) || (image.Point{0, h}).In(inGif.Image[frameIndex].Rect) || (image.Point{w, h}).In(inGif.Image[frameIndex].Rect) {
+		if (image.Point{0, startHeight}).In(inGif.Image[frameIndex].Rect) || (image.Point{w, startHeight}).In(inGif.Image[frameIndex].Rect) || (image.Point{0, endHeight}).In(inGif.Image[frameIndex].Rect) || (image.Point{w, endHeight}).In(inGif.Image[frameIndex].Rect) {
 			// Create new frame from original to modify
 			newFrame := &image.Paletted{
 				Pix:     make([]uint8, len(inGif.Image[frameIndex].Pix)),
@@ -109,11 +109,7 @@ func AddProgressBarFPS(inGif *gif.GIF, barTop bool, barHeight int, barColor colo
 
 			// Draw progressbar
 			for x := 0; x < w; x++ {
-				for h := 0; h < barHeight; h++ {
-					var y = h
-					if !barTop {
-						y = inGif.Config.Height - h
-					}
+				for y := startHeight; y < endHeight; y++ {
 					newFrame.Set(x, y, barColor)
 				}
 			}
@@ -128,12 +124,6 @@ func AddProgressBarFPS(inGif *gif.GIF, barTop bool, barHeight int, barColor colo
 
 		// Add a progressbar-only frame
 		if w > 0 {
-			startHeight := 0
-			endHeight := barHeight - 1
-			if !barTop {
-				startHeight = inGif.Config.Height - barHeight + 1
-				endHeight = inGif.Config.Height
-			}
 			newPFrame := &image.Paletted{
 				Pix:    make([]uint8, 1200*500),
 				Stride: 0,
